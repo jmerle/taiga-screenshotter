@@ -1,0 +1,53 @@
+{
+  "name": "taiga-screenshotter",
+  "version": "1.0.0",
+  "description": "A little Node.js script to take screenshots of a Taiga scrumboard and burndown chart",
+  "repository": "jmerle/taiga-screenshotter",
+  "author": {
+    "name": "Jasper van Merle",
+    "email": "jaspervmerle@gmail.com"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "lint": "yarn lint:tslint && yarn lint:prettier",
+    "lint:tslint": "tslint -p tsconfig.json -c tslint.json -t stylish",
+    "lint:prettier": "prettier --check --ignore-path .gitignore '**/*.{ts,json}'",
+    "fix": "yarn fix:tslint && yarn fix:prettier",
+    "fix:tslint": "yarn lint:tslint --fix",
+    "fix:prettier": "prettier --write --ignore-path .gitignore '**/*.{ts,json}'"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^12.7.11",
+    "husky": "^3.0.8",
+    "lint-staged": "^9.4.1",
+    "prettier": "^1.18.2",
+    "ts-node": "^8.4.1",
+    "tslint": "^5.20.0",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.6.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.ts": [
+      "yarn lint:tslint --fix",
+      "prettier --write",
+      "git add"
+    ],
+    "*.json": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "prettier": {
+    "printWidth": 120,
+    "singleQuote": true,
+    "trailingComma": "all"
+  }
+}
