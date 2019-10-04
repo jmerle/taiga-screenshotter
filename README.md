@@ -1,6 +1,6 @@
 # Taiga Screenshotter
 
-A little Node.js script to take screenshots of a Taiga scrumboard and burndown chart.
+A little Node.js script to take screenshots of a Taiga scrumboard and burndown chart. Only works on public projects.
 
 ## Usage
 
