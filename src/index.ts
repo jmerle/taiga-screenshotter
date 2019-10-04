@@ -1,8 +1,6 @@
 import * as fs from 'fs';
 import * as puppeteer from 'puppeteer';
 
-const TAIGA_URL = 'https://tree.taiga.io/project/jmerle-over-the-mountain/taskboard/sprint-3-5537';
-
 async function takeScreenshot(page: puppeteer.Page, name: string, clip?: puppeteer.BoundingBox): Promise<void> {
   if (!fs.existsSync('out')) {
     await fs.promises.mkdir('out');
@@ -51,6 +49,11 @@ async function getStatsRect(page: puppeteer.Page): Promise<puppeteer.BoundingBox
 }
 
 (async () => {
+  if (process.argv.length !== 3) {
+    console.error('Usage: yarn start <scrumboard url>');
+    process.exit(1);
+  }
+
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
@@ -66,7 +69,7 @@ async function getStatsRect(page: puppeteer.Page): Promise<puppeteer.BoundingBox
     path: '/',
   });
 
-  await page.goto(TAIGA_URL);
+  await page.goto(process.argv[2]);
   await page.waitForSelector('.loader.active');
   await page.waitForSelector('.loader:not(.active)');
 
