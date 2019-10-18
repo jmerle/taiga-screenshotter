@@ -1,5 +1,9 @@
 import * as fs from 'fs';
 import * as puppeteer from 'puppeteer';
+import * as rimraf from 'rimraf';
+
+// tslint:disable-next-line:no-var-requires
+const mergeImg = require('merge-img');
 
 async function takeScreenshot(page: puppeteer.Page, name: string, clip?: puppeteer.BoundingBox): Promise<void> {
   if (!fs.existsSync('out')) {
@@ -19,6 +23,7 @@ async function takeScreenshot(page: puppeteer.Page, name: string, clip?: puppete
   }
 
   await page.screenshot(options);
+  console.log(`Screenshotted page to ${options.path}`);
 }
 
 function getRect(page: puppeteer.Page, sel: string): Promise<puppeteer.BoundingBox> {
@@ -54,6 +59,9 @@ async function getStatsRect(page: puppeteer.Page): Promise<puppeteer.BoundingBox
     process.exit(1);
   }
 
+  console.log('Cleaning out...');
+  rimraf.sync('out/');
+
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
@@ -73,11 +81,15 @@ async function getStatsRect(page: puppeteer.Page): Promise<puppeteer.BoundingBox
   await page.waitForSelector('.loader.active');
   await page.waitForSelector('.loader:not(.active)');
 
+  console.log('Screenshotting burn down chart...');
+
   await page.click('.toggle-analytics-visibility');
   await page.waitFor(1000);
 
   const statsRect = await getStatsRect(page);
   await takeScreenshot(page, 'burndownchart', statsRect);
+
+  console.log('Screenshotting scrum board...');
 
   const columnCount = await page.evaluate(() => {
     document.body.appendChild(document.querySelector('div[tg-taskboard-sortable]'));
@@ -95,6 +107,56 @@ async function getStatsRect(page: puppeteer.Page): Promise<puppeteer.BoundingBox
   });
 
   await takeScreenshot(page, 'scrumbord');
+
+  if (process.env.SKIP_STORIES) {
+    await browser.close();
+    return;
+  }
+
+  console.log('Screenshotting user stories...');
+
+  const userStoryImages = [];
+  const userStoryLinks = await page.evaluate(async () => {
+    return [...document.querySelectorAll<HTMLLinkElement>('h3.us-title > a')].map(el => {
+      const id = /#(\d+)/.exec(el.title)[1];
+
+      const prefix = el.href.split('/taskboard')[0];
+      const suffix = `/us/${id}`;
+
+      return prefix + suffix;
+    });
+  });
+
+  for (let i = 0; i < userStoryLinks.length; i++) {
+    await page.goto(userStoryLinks[i]);
+    await page.waitForSelector('.loader.active');
+    await page.waitForSelector('.loader:not(.active)');
+
+    await page.evaluate(() => {
+      const main = document.querySelector('.main.us-detail');
+
+      main.querySelector('.us-detail-header').remove();
+      main.querySelector('tg-custom-attributes-values').remove();
+      main.querySelector('.related-tasks').remove();
+      main.querySelector('tg-attachments-full').remove();
+      main.querySelector('tg-history-section').remove();
+
+      document.body.appendChild(main);
+
+      document.querySelector('.master').remove();
+      document.querySelector('div[tg-navigation-bar]').remove();
+    });
+
+    const mainRect = await getRect(page, '.main.us-detail');
+    await takeScreenshot(page, `user-story-${i}`, mainRect);
+
+    userStoryImages.push(`out/user-story-${i}.jpg`);
+  }
+
+  console.log('Merging user stories to out/user-stories.png...');
+
+  const mergedStories = await mergeImg(userStoryImages, { direction: true });
+  await mergedStories.write('out/user-stories.png');
 
   await browser.close();
 })();
