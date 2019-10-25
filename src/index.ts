@@ -140,6 +140,7 @@ async function getStatsRect(page: puppeteer.Page): Promise<puppeteer.BoundingBox
       main.querySelector('.related-tasks').remove();
       main.querySelector('tg-attachments-full').remove();
       main.querySelector('tg-history-section').remove();
+      main.querySelector('tg-created-by-display').remove();
 
       document.body.appendChild(main);
 
