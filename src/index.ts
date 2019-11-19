@@ -133,14 +133,15 @@ async function getStatsRect(page: puppeteer.Page): Promise<puppeteer.BoundingBox
     await page.waitForSelector('.loader:not(.active)');
 
     await page.evaluate(() => {
-      const main = document.querySelector('.main.us-detail');
+      const main = document.querySelector('.main.detail');
 
-      main.querySelector('.us-detail-header').remove();
+      main.querySelector<HTMLDivElement>('.detail-header-container').style.margin = '0';
+      main.querySelector('.detail-header > .action-buttons').remove();
+      main.querySelector('.detail-header > .subheader').remove();
       main.querySelector('tg-custom-attributes-values').remove();
       main.querySelector('.related-tasks').remove();
       main.querySelector('tg-attachments-full').remove();
       main.querySelector('tg-history-section').remove();
-      main.querySelector('tg-created-by-display').remove();
 
       document.body.appendChild(main);
 
@@ -148,7 +149,7 @@ async function getStatsRect(page: puppeteer.Page): Promise<puppeteer.BoundingBox
       document.querySelector('div[tg-navigation-bar]').remove();
     });
 
-    const mainRect = await getRect(page, '.main.us-detail');
+    const mainRect = await getRect(page, '.main.detail');
     await takeScreenshot(page, `user-story-${i}`, mainRect);
 
     userStoryImages.push(`out/user-story-${i}.jpg`);
